@@ -1,23 +1,30 @@
 name: GitHub-Profile-Summary-Cards
 
 on:
-  schedule: # execute every 24 hours
-    - cron: "* */24 * * *"
+  schedule:
+    - cron: "0 0 * * *"  # ✅ 每天 00:00 UTC（也就是你 UTC+8 的早上 8 點）
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     name: generate-github-profile-summary-cards
+    permissions:
+      contents: write  # ✅ 讓 bot 有權限 push 更新
 
     steps:
       - uses: actions/checkout@v4
-      - uses: vn7n24fzkq/github-profile-summary-cards@release
-        env: # default use ${{ secrets.SUMMARY_GITHUB_TOKEN }}, you should replace with your personal access token
-          GITHUB_TOKEN: ${{ secrets.SUMMARY_GITHUB_TOKEN }}
+
+      - name: Setup Git identity  # ✅ 加上 git 身分，避免 push 錯誤
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Generate summary cards
+        uses: vn7n24fzkq/github-profile-summary-cards@release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SUMMARY_GITHUB_TOKEN }}  # ✅ 使用 PAT，確保權限足
         with:
           USERNAME: ${{ github.repository_owner }}
-          # BRANCH_NAME is optional, default to main, branch name to push cards
           BRANCH_NAME: "main"
-          # UTC_OFFSET is optional, default to zero
           UTC_OFFSET: 8
